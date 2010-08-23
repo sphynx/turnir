@@ -1,0 +1,13 @@
+Name: td-tool
+Version: 0.0.1
+Cabal-Version: >= 1.2
+Build-Type: Simple
+Author: Ivan N. Veselov
+Description: A tool for managing tournaments
+License: BSD3
+License-file: LICENSE
+
+Executable td-tool
+  Main-Is: TdTool.hs
+  Build-Depends: base >=4
+  Hs-Source-Dirs: src
