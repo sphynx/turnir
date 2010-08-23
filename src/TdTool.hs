@@ -9,8 +9,14 @@
 
 module Main where
 
-import System.Time
 import Data.List
+import System.Time
+
+import System.Console.Shell
+import System.Console.Shell.Backend.Haskeline
+import System.Console.Shell.ShellMonad
+
+import Control.Monad.Trans
 
 data Player = Player { pName :: String
                      , pRating :: Int
@@ -108,6 +114,11 @@ roundRobin ps = map (\(no, pairs) -> mkRoundPairings no ps pairs) . zipWith (,) 
 players :: Int -> [Player]
 players n = map (\x -> Player ("P" ++ show x) 1800 "Kyiv" "") [1 .. n]
 
+react :: String -> Sh () ()
+react s = liftIO $ putStrLn ("OK, got " ++ s)
+
+main :: IO ()
 main = do
     putStrLn "Welcome, tournament director! Let's see pairings for Round-Robin 5:"
     mapM_ (putStrLn . show) . roundRobin . players $ 5
+    runShell (mkShellDescription [] react) haskelineBackend ()

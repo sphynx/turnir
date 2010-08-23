@@ -9,5 +9,5 @@ License-file: LICENSE
 
 Executable td-tool
   Main-Is: TdTool.hs
-  Build-Depends: base >=4
+  Build-Depends: base >=4, mtl, Shellac, Shellac-haskeline, old-time
   Hs-Source-Dirs: src
