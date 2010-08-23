@@ -16,7 +16,9 @@ data Player = Player { pName :: String
                      , pRating :: Int
                      , pPlace :: String
                      , pDescr :: String
-                     } deriving Show
+                     }
+instance Show Player where
+    show (Player name _ _ _) = name
 
 data Tourney = Tourney { tName :: String
                        , tPlayers :: [Player]
@@ -27,7 +29,12 @@ data Tourney = Tourney { tName :: String
 data TournamentType = Swiss | RoundRobin
 
 -- round number, list of pairs, list of players getting bye in this round
-data RoundPairings = RoundPairings Int [(Player, Player)] [Player] deriving Show
+data RoundPairings = RoundPairings Int [(Player, Player)] [Player]
+showPairs = concatMap (\(p1, p2) -> show p1 ++ " - " ++ show p2 ++ "\n")
+showByes [] = ""
+showByes bs = "bye: " ++ (concatMap (\p -> show p ++ " ") bs)
+instance Show RoundPairings where
+    show (RoundPairings n ps byes) = "Round " ++ show n ++ "\n\n" ++ showPairs ps ++ showByes byes ++ "\n"
 
 type Pairings = [RoundPairings]
 
@@ -94,7 +101,8 @@ mkRoundPairings n ps pairs = RoundPairings n pairings byes
 
 -- actually makes all the pairings with players
 roundRobin :: [Player] -> Pairings
-roundRobin ps = map (mkRoundPairings 1 ps) . rr $ (length ps)
+roundRobin ps = map (\(no, pairs) -> mkRoundPairings no ps pairs) . zipWith (,) [1..] . rr $ n
+    where n = length ps
 
 -- generates test players list
 players :: Int -> [Player]
@@ -102,6 +110,4 @@ players n = map (\x -> Player ("P" ++ show x) 1800 "Kyiv" "") [1 .. n]
 
 main = do
     putStrLn "Welcome, tournament director! Let's see pairings for Round-Robin 5:"
-    putStrLn (show . roundRobin . players $ 5)
-
-
+    mapM_ (putStrLn . show) . roundRobin . players $ 5
