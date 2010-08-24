@@ -47,7 +47,7 @@ showPlayersSF = do
 roundRobinSF :: Sh ShellState ()
 roundRobinSF = do
     (ShellState ps) <- getShellSt
-    mapM_ (shellPutStrLn . show) . RR.makePairings $ ps
+    mapM_ (shellPutStrLn . ppPairings) . RR.makePairings $ ps
 
 shellDescr :: ShellDescription ShellState
 shellDescr = (mkShellDescription cmds react) {

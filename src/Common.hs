@@ -31,14 +31,13 @@ data Tournament = Tournament { tName :: String
 data TournamentType = Swiss | RoundRobin
 
 -- round number, list of pairs, list of players getting bye in this round
-data RoundPairings = RoundPairings Int [(Player, Player)] [Player]
+data RoundPairings = RoundPairings Int [(Player, Player)] [Player] deriving Show
 
-showPairs = concatMap (\(p1, p2) -> show p1 ++ " - " ++ show p2 ++ "\n")
-showByes [] = ""
-showByes bs = "bye: " ++ (concatMap (\p -> show p ++ " ") bs)
-
-instance Show RoundPairings where
-    show (RoundPairings n ps byes) = "Round " ++ show n ++ "\n\n" ++ showPairs ps ++ showByes byes ++ "\n"
+-- pretty printing
+ppPairings (RoundPairings n ps byes) = "Round " ++ show n ++ "\n\n" ++ showPairs ps ++ showByes byes ++ "\n"
+    where showPairs = concatMap (\(p1, p2) -> show p1 ++ " - " ++ show p2 ++ "\n")
+          showByes [] = ""
+          showByes bs = "bye: " ++ (concatMap (\p -> show p ++ " ") bs)
 
 type Pairings = [RoundPairings]
 
