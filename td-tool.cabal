@@ -2,12 +2,24 @@ Name: td-tool
 Version: 0.0.1
 Cabal-Version: >= 1.2
 Build-Type: Simple
-Author: Ivan N. Veselov
+Author: Ivan N. Veselov <veselov@gmail.com>
 Description: A tool for managing tournaments
 License: BSD3
 License-file: LICENSE
 
+flag test
+    default: True
+
 Executable td-tool
   Main-Is: Main.hs
-  Build-Depends: base >=4, Shellac, Shellac-haskeline
+  Build-Depends: base >= 4, Shellac, Shellac-haskeline
   Hs-Source-Dirs: src
+
+Executable tests
+  Main-Is: Tests.hs
+  Hs-Source-Dirs: src test
+  if flag(test)
+    Build-Depends: base >= 4, HUnit, QuickCheck >= 1.0.0, test-framework, test-framework-quickcheck, test-framework-hunit
+    Other-Modules: RoundRobin
+  else
+    Buildable: False
