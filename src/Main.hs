@@ -24,7 +24,7 @@ players n = map (\x -> Player ("P" ++ show x) 1800 "Kyiv" "") [1 .. n]
 
 -- shell interaction
 react :: String -> Sh ShellState ()
-react s = shellPutStrLn ("Unknown command: " ++ s)
+react s = shellPutErrLn ("Unknown command: " ++ s)
 
 -- known commands
 cmds = [ exitCommand "quit"
