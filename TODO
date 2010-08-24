@@ -1,6 +1,7 @@
-- common API for pairings
+- common API for pairing engines
 - round-by-round pairings generation
 - save and edit pairings
+- load players from file
 - implement round-robin with alternating colors
 - review data structures
 - handle game result setting and displaying
