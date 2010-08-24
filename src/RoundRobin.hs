@@ -56,24 +56,24 @@ round1 n
 -- 6 5 4  converts to  5 4 3
 rotate :: ([Int], [Int]) -> ([Int], [Int])
 rotate (f, s) = ( head f : head s : (init . tail $ f),
-                  (tail s) ++ [(last f)] )
+                  tail s ++ [last f] )
 
 -- makes ready for use round-robin pairings but only with player indexes
 rr :: Int -> [[(Int, Int)]]
 rr n = map (uncurry zip) . take rounds . iterate rotate . round1 $ n
     -- a number of rounds is equal to (N - 1) if N is even, and N otherwise (because if
     -- the number is odd then every player has to skip one round having a bye).
-    where rounds = if even n then (n - 1) else n
+    where rounds = if even n then n - 1 else n
 
 -- makes pairings for one round with actual players using indexes provided
 mkRoundPairings :: Int -> [Player] -> [(Int, Int)] -> RoundPairings
 mkRoundPairings n ps pairs = RoundPairings n games byes
     where (bye, normal) = partition (\(x, y) -> x == byeMark || y == byeMark) pairs
           player x = ps !! (x - 1)
-          byes = map (\(x, y) -> if x == 0 then (player y) else (player x)) bye
+          byes = map (\(x, y) -> if x == 0 then player y else player x) bye
           games = map (\(x, y) -> Game 0 (player x) (player y) NotStarted) normal
 
 -- actually makes all the pairings with players
 makePairingsForAllRounds :: [Player] -> Pairings
-makePairingsForAllRounds ps = map (\(no, pairs) -> mkRoundPairings no ps pairs) . zipWith (,) [1..] . rr $ n
+makePairingsForAllRounds ps = map (\(no, pairs) -> mkRoundPairings no ps pairs) . zip [1..] . rr $ n
     where n = length ps

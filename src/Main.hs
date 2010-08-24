@@ -34,7 +34,7 @@ cmds = [ exitCommand "quit"
 
 addPlayerSF :: String -> Sh ShellState ()
 addPlayerSF name = do
-    modifyShellSt (\(ShellState ps maxId) -> ShellState ((Player (maxId + 1) name 1800 Available) : ps) (maxId + 1))
+    modifyShellSt (\(ShellState ps maxId) -> ShellState (Player (maxId + 1) name 1800 Available : ps) (maxId + 1))
     shellPutStrLn (name ++ " added")
 
 showPlayersSF :: Sh ShellState ()
