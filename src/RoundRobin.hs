@@ -65,6 +65,14 @@ rr n = map (uncurry zip) . take rounds . iterate rotate . round1 $ n
     -- the number is odd then every player has to skip one round having a bye).
     where rounds = if even n then n - 1 else n
 
+-- to get fair color distribution we have to flip colors of the first player in each round,
+-- otherwise fixed 1st player always gets white. We do this with help of mapAccumL
+-- keeping track of index @i@ and checking if it's even
+flipColorsInEvenRounds :: [[(Int, Int)]] -> [[(Int, Int)]]
+flipColorsInEvenRounds = snd . mapAccumL (\i pairs -> (i + 1, flipColors i pairs)) 0
+    where flipColors i pairs = if even i then pairs else map flipColor pairs
+          flipColor p@(p1, p2) = if p1 == 1 then (p2, 1) else p
+
 -- makes pairings for one round with actual players using indexes provided
 mkRoundPairings :: Int -> [Player] -> [(Int, Int)] -> RoundPairings
 mkRoundPairings n ps pairs = RoundPairings n games byes
@@ -75,5 +83,6 @@ mkRoundPairings n ps pairs = RoundPairings n games byes
 
 -- actually makes all the pairings with players
 makePairingsForAllRounds :: [Player] -> Pairings
-makePairingsForAllRounds ps = map (\(no, pairs) -> mkRoundPairings no ps pairs) . zip [1..] . rr $ n
-    where n = length ps
+makePairingsForAllRounds ps =
+    map (\(no, pairs) -> mkRoundPairings no ps pairs) . zip [1..] . flipColorsInEvenRounds . rr $ n
+        where n = length ps
