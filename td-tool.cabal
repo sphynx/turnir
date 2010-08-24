@@ -19,7 +19,7 @@ Executable tests
   Main-Is: Tests.hs
   Hs-Source-Dirs: src test
   if flag(test)
-    Build-Depends: base >= 4, HUnit, QuickCheck >= 1.0.0, test-framework, test-framework-quickcheck, test-framework-hunit
+    Build-Depends: base >= 4, HUnit, QuickCheck >= 1.0.0, test-framework, test-framework-quickcheck, test-framework-hunit, containers
     Other-Modules: RoundRobin
   else
     Buildable: False
