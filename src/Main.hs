@@ -10,17 +10,14 @@
 module Main where
 
 import Common
+import PairingEngine
 import qualified RoundRobin as RR
 
 import System.Console.Shell
 import System.Console.Shell.Backend.Haskeline
 import System.Console.Shell.ShellMonad
 
-data ShellState = ShellState [Player]
-
--- generates dummy players list
-players :: Int -> [Player]
-players n = map (\x -> Player ("P" ++ show x) 1800 "Kyiv" "") [1 .. n]
+data ShellState = ShellState [Player] Int
 
 -- shell interaction
 react :: String -> Sh ShellState ()
@@ -36,18 +33,21 @@ cmds = [ exitCommand "quit"
 
 addPlayerSF :: String -> Sh ShellState ()
 addPlayerSF name = do
-    modifyShellSt (\(ShellState ps) -> ShellState ((Player name 0 "" "") : ps))
+    modifyShellSt (\(ShellState ps maxId) -> ShellState ((Player (maxId + 1) name 1800 "" "") : ps) (maxId + 1))
     shellPutStrLn (name ++ " added")
 
 showPlayersSF :: Sh ShellState ()
 showPlayersSF = do
-    (ShellState ps) <- getShellSt
+    (ShellState ps _) <- getShellSt
     mapM_ (shellPutStrLn . show) ps
 
 roundRobinSF :: Sh ShellState ()
 roundRobinSF = do
-    (ShellState ps) <- getShellSt
-    mapM_ (shellPutStrLn . ppPairings) . RR.makePairings $ ps
+    (ShellState ps _) <- getShellSt
+    mapM_ (shellPutStrLn . ppPairings) . RR.makePairingsForAllRounds . map toEnginePlayer $ ps
+
+toEnginePlayer :: Player -> EnginePlayer
+toEnginePlayer (Player id _ rating _ _) = EnginePlayer id rating Available
 
 shellDescr :: ShellDescription ShellState
 shellDescr = (mkShellDescription cmds react) {
@@ -57,5 +57,5 @@ shellDescr = (mkShellDescription cmds react) {
 
 main :: IO ()
 main = do
-    runShell shellDescr haskelineBackend (ShellState [])
+    runShell shellDescr haskelineBackend (ShellState [] 0)
     return ()

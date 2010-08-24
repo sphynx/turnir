@@ -26,9 +26,11 @@ data ScoreType = Classic
                  -- ^ any other possible scores in the following order (win, draw, loss)
 
 -- | All the data about player needed for engines to work properly, includes ID, rating and Status
-data EnginePlayer = P ID Rating Status
+data EnginePlayer = EnginePlayer ID Rating Status
 type ID = Int
 type Rating = Int
+instance Show EnginePlayer where
+    show (EnginePlayer pid _ _) = show pid
 
 -- | Status of a player in the tourney
 data Status = Available -- ^ ready to play
@@ -42,3 +44,44 @@ data TournamentParams = TParams
     , rounds :: Int -- ^ number of rounds in Swiss, irrelevany in RoundRobin
     , scoreType :: ScoreType -- ^ type of scoring used
     }
+
+-- | Game along with its participants and result
+data Game = Game
+    { gameId :: GameID -- ^ ID of the game
+    , white :: EnginePlayer -- ^ white player
+    , black :: EnginePlayer -- ^ black player
+    , gameResult :: GameResult -- ^ result of the game
+    }
+type GameID = Int
+
+-- | Game result. Besides usual win/draw/loss, there are a couple of non-standard results involded
+data GameResult = NotStarted | Win | Loss | Draw | Adjourned | Cancelled | ForfeitWin | ForfeitLoss
+
+-- | Represents pairings for one round
+data RoundPairings = RoundPairings
+   Int -- ^ round number
+   [Game] -- ^ list of schedules games
+   [EnginePlayer] -- ^ list of players getting bye in this round
+
+-- | Pretty printing for pairings (well, it's not actually very pretty, should eventually
+-- switch to some specific PP library).
+ppPairings (RoundPairings n games byes) =
+    "Round " ++ show n ++ "\n\n" ++ showPairs games ++ showByes byes ++ "\n"
+    where showPairs = concatMap (\(Game _ p1 p2 _) -> show p1 ++ " - " ++ show p2 ++ "\n")
+          showByes [] = ""
+          showByes bs = "bye: " ++ (concatMap (\p -> show p ++ " ") bs)
+
+type Pairings = [RoundPairings]
+
+-- | Pairing engine itself
+data PairingEngine = PairingEngine
+   { initEngine    :: [EnginePlayer] -> TournamentParams -> PairingEngine
+                   -- ^ Initializes the engine with players lost and tournament parameters
+
+   , makePairings  :: Maybe Int -> Pairings
+                   -- ^ Make pairings for given round (for example @Just 2@) or
+                   -- for all the rounds (@None@)
+
+   , setGameResult :: GameID -> GameResult -> PairingEngine
+                   -- ^ Sets the game result for the sheduled game
+   }

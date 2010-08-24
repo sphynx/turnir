@@ -32,9 +32,11 @@
 --
 -- For further details, please see Wikipedia: http://en.wikipedia.org/wiki/Round-robin_tournament
 --
-module RoundRobin(makePairings) where
+module RoundRobin(
+    makePairingsForAllRounds -- ^ create pairings for all the rounds
+) where
 
-import Common
+import PairingEngine
 import Data.List
 
 -- index used for "dummy player" and as a mark of bye
@@ -64,14 +66,14 @@ rr n = map (uncurry zip) . take rounds . iterate rotate . round1 $ n
     where rounds = if even n then (n - 1) else n
 
 -- makes pairings for one round with actual players using indexes provided
-mkRoundPairings :: Int -> [Player] -> [(Int, Int)] -> RoundPairings
-mkRoundPairings n ps pairs = RoundPairings n pairings byes
+mkRoundPairings :: Int -> [EnginePlayer] -> [(Int, Int)] -> RoundPairings
+mkRoundPairings n ps pairs = RoundPairings n games byes
     where (bye, normal) = partition (\(x, y) -> x == byeMark || y == byeMark) pairs
           player x = ps !! (x - 1)
           byes = map (\(x, y) -> if x == 0 then (player y) else (player x)) bye
-          pairings = map (\(x, y) -> (player x, player y)) normal
+          games = map (\(x, y) -> Game 0 (player x) (player y) NotStarted) normal
 
 -- actually makes all the pairings with players
-makePairings :: [Player] -> Pairings
-makePairings ps = map (\(no, pairs) -> mkRoundPairings no ps pairs) . zipWith (,) [1..] . rr $ n
+makePairingsForAllRounds :: [EnginePlayer] -> Pairings
+makePairingsForAllRounds ps = map (\(no, pairs) -> mkRoundPairings no ps pairs) . zipWith (,) [1..] . rr $ n
     where n = length ps
