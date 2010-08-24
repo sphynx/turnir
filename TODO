@@ -1,0 +1,11 @@
+- common API for pairings
+- round-by-round pairings generation
+- save and edit pairings
+- implement round-robin with alternating colors
+- review data structures
+- handle game result setting and displaying
+- add basic Swiss system pairings
+- add DB/file saving and loading
+- add commands for editing, removing, saving, loading, etc.
+- add report generation (console, html, pdf, txt?)
+- rating calculations (Elo, Glicko)
