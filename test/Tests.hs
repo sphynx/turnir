@@ -67,7 +67,7 @@ propGamesNumber = forAll (choose (1, 10)) $ \n -> gamesNo n == (n * (n - 1)) `di
 
 -- a number of games played as white should be fairly distributes
 -- that is, each player should play play near half of games as white
-propWhiteGames = forAll (choose (1, 10)) $ \x ->
-   let pred = if odd x then \y -> y == (x - 1) `div` 2
-                       else \y -> y == x `div` 2 || y == (x `div` 2) + 1
+propWhiteGames = forAll (choose (2, 16)) $ \x ->
+   let pred = if odd x then \y -> y /= x `div` 2
+                       else \y -> y /= x `div` 2 && y /= (x `div` 2) - 1
    in M.null $ M.filter pred $ whites x
