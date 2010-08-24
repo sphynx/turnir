@@ -6,10 +6,11 @@
 -- Copyright (C) 2010 Ivan N. Veselov
 --
 -- License: BSD3
+--
+-- | Main module, the entry point.
 
 module Main where
 
-import Common
 import PairingEngine
 import qualified RoundRobin as RR
 
@@ -28,12 +29,12 @@ cmds = [ exitCommand "quit"
        , helpCommand "help"
        , cmd "add" addPlayerSF "Adds a new player"
        , cmd "show" showPlayersSF "Shows currently registered players"
-       , cmd "rr" roundRobinSF "Make Round-Robin pairings"
+       , cmd "rr" roundRobinSF "Makes Round-Robin pairings"
        ]
 
 addPlayerSF :: String -> Sh ShellState ()
 addPlayerSF name = do
-    modifyShellSt (\(ShellState ps maxId) -> ShellState ((Player (maxId + 1) name 1800 "" "") : ps) (maxId + 1))
+    modifyShellSt (\(ShellState ps maxId) -> ShellState ((Player (maxId + 1) name 1800 Available) : ps) (maxId + 1))
     shellPutStrLn (name ++ " added")
 
 showPlayersSF :: Sh ShellState ()
@@ -44,10 +45,7 @@ showPlayersSF = do
 roundRobinSF :: Sh ShellState ()
 roundRobinSF = do
     (ShellState ps _) <- getShellSt
-    mapM_ (shellPutStrLn . ppPairings) . RR.makePairingsForAllRounds . map toEnginePlayer $ ps
-
-toEnginePlayer :: Player -> EnginePlayer
-toEnginePlayer (Player id _ rating _ _) = EnginePlayer id rating Available
+    mapM_ (shellPutStrLn . ppPairings) . RR.makePairingsForAllRounds $ ps
 
 shellDescr :: ShellDescription ShellState
 shellDescr = (mkShellDescription cmds react) {

@@ -12,7 +12,7 @@
 --
 module PairingEngine where
 
--- | Different types of tournament play systems, includes Swiss and RoundRobin
+-- | Different types of tournament play systems, includes various Swiss systems and RoundRobin
 data PlaySystem = DubovSwiss | DutchSwiss | LimSwiss | RoundRobin | DoubleRoundRobin
 
 -- | Tie breaks are the means of resolving ties when two or more players have the
@@ -25,16 +25,19 @@ data ScoreType = Classic
                | Score Int Int Int
                  -- ^ any other possible scores in the following order (win, draw, loss)
 
--- | All the data about player needed for engines to work properly, includes ID, rating and Status
-data EnginePlayer = EnginePlayer ID Rating Status
-type ID = Int
-type Rating = Int
-instance Show EnginePlayer where
-    show (EnginePlayer pid _ _) = show pid
+-- | All the data about player needed for engines to work properly, includes ID, names, rating and status
+data Player = Player
+              Int -- ^ Player ID to use for further reference
+              String -- ^ Player name
+              Int -- ^ Rating
+              Status -- ^ Status
+
+instance Show Player where
+    show (Player _ name _ _) = name
 
 -- | Status of a player in the tourney
 data Status = Available -- ^ ready to play
-            | NotAvailable -- ^ cancelled his
+            | NotAvailable -- ^ cancelled his tourney participation
             | Bye -- ^ requested half-point bye or doesn't have a pair (odd number of players case)
 
 -- | Set of various tournament params used by the engine
@@ -48,8 +51,8 @@ data TournamentParams = TParams
 -- | Game along with its participants and result
 data Game = Game
     { gameId :: GameID -- ^ ID of the game
-    , white :: EnginePlayer -- ^ white player
-    , black :: EnginePlayer -- ^ black player
+    , white :: Player -- ^ white player
+    , black :: Player -- ^ black player
     , gameResult :: GameResult -- ^ result of the game
     }
 type GameID = Int
@@ -61,7 +64,7 @@ data GameResult = NotStarted | Win | Loss | Draw | Adjourned | Cancelled | Forfe
 data RoundPairings = RoundPairings
    Int -- ^ round number
    [Game] -- ^ list of schedules games
-   [EnginePlayer] -- ^ list of players getting bye in this round
+   [Player] -- ^ list of players getting bye in this round
 
 -- | Pretty printing for pairings (well, it's not actually very pretty, should eventually
 -- switch to some specific PP library).
@@ -74,14 +77,15 @@ ppPairings (RoundPairings n games byes) =
 type Pairings = [RoundPairings]
 
 -- | Pairing engine itself
-data PairingEngine = PairingEngine
-   { initEngine    :: [EnginePlayer] -> TournamentParams -> PairingEngine
-                   -- ^ Initializes the engine with players lost and tournament parameters
+data PairingEngine st = PairingEngine
+    -- ^ engine state passed as a parameter, it will be initialized during @initEngine@
+   { initEngine    :: [Player] -> TournamentParams -> st
+                   -- ^ Initializes the engine with players list and tournament parameters
 
-   , makePairings  :: Maybe Int -> Pairings
+   , makePairings  :: st -> Maybe Int -> Pairings
                    -- ^ Make pairings for given round (for example @Just 2@) or
                    -- for all the rounds (@None@)
 
-   , setGameResult :: GameID -> GameResult -> PairingEngine
+   , setGameResult :: st -> GameID -> GameResult
                    -- ^ Sets the game result for the sheduled game
    }
