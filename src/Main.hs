@@ -5,7 +5,7 @@
 --
 -- Copyright (C) 2010 Ivan N. Veselov
 --
--- License: BSD
+-- License: BSD3
 
 module Main where
 
@@ -16,18 +16,46 @@ import System.Console.Shell
 import System.Console.Shell.Backend.Haskeline
 import System.Console.Shell.ShellMonad
 
-import Control.Monad.Trans
+data ShellState = ShellState [Player]
 
 -- generates dummy players list
 players :: Int -> [Player]
 players n = map (\x -> Player ("P" ++ show x) 1800 "Kyiv" "") [1 .. n]
 
 -- shell interaction
-react :: String -> Sh () ()
-react s = liftIO $ putStrLn ("OK, got " ++ s)
+react :: String -> Sh ShellState ()
+react s = shellPutStrLn ("Unknown command: " ++ s)
+
+-- known commands
+cmds = [ exitCommand "quit"
+       , helpCommand "help"
+       , cmd "add" addPlayerSF "Adds a new player"
+       , cmd "show" showPlayersSF "Shows currently registered players"
+       , cmd "rr" roundRobinSF "Make Round-Robin pairings"
+       ]
+
+addPlayerSF :: String -> Sh ShellState ()
+addPlayerSF name = do
+    modifyShellSt (\(ShellState ps) -> ShellState ((Player name 0 "" "") : ps))
+    shellPutStrLn (name ++ " added")
+
+showPlayersSF :: Sh ShellState ()
+showPlayersSF = do
+    (ShellState ps) <- getShellSt
+    mapM_ (shellPutStrLn . show) ps
+
+roundRobinSF :: Sh ShellState ()
+roundRobinSF = do
+    (ShellState ps) <- getShellSt
+    mapM_ (shellPutStrLn . show) . RR.makePairings $ ps
+
+shellDescr :: ShellDescription ShellState
+shellDescr = (mkShellDescription cmds react) {
+      commandStyle = OnlyCommands
+    , greetingText = Just "Welcome to td-tool v0.1, mister tournament director!\n"
+    }
 
 main :: IO ()
 main = do
-    putStrLn "Welcome, tournament director! Let's see pairings for Round-Robin 5:"
-    mapM_ (putStrLn . show) . RR.makePairings . players $ 5
-    runShell (mkShellDescription [] react) haskelineBackend ()
+    runShell shellDescr haskelineBackend (ShellState [])
+    return ()

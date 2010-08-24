@@ -5,7 +5,7 @@
 --
 -- Copyright (C) 2010 Ivan N. Veselov
 --
--- License: BSD
+-- License: BSD3
 --
 -- Round-robin (all-play-all) pairings implementation.
 --
@@ -46,18 +46,22 @@ round1 :: Int -> ([Int], [Int])
 round1 n
     | even n    = ( [1 .. half],     [n, n - 1 .. (half + 1)] )
     | otherwise = ( [1 .. half + 1], byeMark : [n, n - 1 .. (half + 2)] )
-                  where half = n `div` 2
+    where half = n `div` 2
 
 -- implements clockwise rotation, based on two rows/lists representation.
 -- example (1 remains in place, all the other indexes rotate clockwise):
 -- 1 2 3               1 6 2
 -- 6 5 4  converts to  5 4 3
 rotate :: ([Int], [Int]) -> ([Int], [Int])
-rotate (f, s) = ( head f : head s : (init . tail $ f), (tail s) ++ [(last f)] )
+rotate (f, s) = ( head f : head s : (init . tail $ f),
+                  (tail s) ++ [(last f)] )
 
 -- makes ready for use round-robin pairings but only with player indexes
 rr :: Int -> [[(Int, Int)]]
-rr n = map (uncurry zip) . take n . iterate rotate . round1 $ n
+rr n = map (uncurry zip) . take rounds . iterate rotate . round1 $ n
+    -- a number of rounds is equal to (N - 1) if N is even, and N otherwise (because if
+    -- the number is odd then every player has to skip one round having a bye).
+    where rounds = if even n then (n - 1) else n
 
 -- makes pairings for one round with actual players using indexes provided
 mkRoundPairings :: Int -> [Player] -> [(Int, Int)] -> RoundPairings
