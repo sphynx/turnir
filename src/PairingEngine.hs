@@ -34,11 +34,16 @@ data Player = Player
 
 instance Show Player where
     show (Player _ name _ _) = name
+instance Eq Player where
+    Player id1 _ _ _ == Player id2 _ _ _ = id1 == id2
+instance Ord Player where
+    Player id1 _ _ _ <= Player id2 _ _ _ = id1 <= id2
 
 -- | Status of a player in the tourney
 data Status = Available -- ^ ready to play
             | NotAvailable -- ^ cancelled his tourney participation
             | Bye -- ^ requested half-point bye or doesn't have a pair (odd number of players case)
+            deriving Show
 
 -- | Set of various tournament params used by the engine
 data TournamentParams = TParams
@@ -54,17 +59,21 @@ data Game = Game
     , white :: Player -- ^ white player
     , black :: Player -- ^ black player
     , gameResult :: GameResult -- ^ result of the game
-    }
+    } deriving (Eq, Show)
 type GameID = Int
+instance Ord Game where
+    (Game gid1 _ _ _) <= (Game gid2 _ _ _) = gid1 <= gid2
 
 -- | Game result. Besides usual win/draw/loss, there are a couple of non-standard results involded
 data GameResult = NotStarted | Win | Loss | Draw | Adjourned | Cancelled | ForfeitWin | ForfeitLoss
+                deriving (Show, Eq)
 
 -- | Represents pairings for one round
-data RoundPairings = RoundPairings
-   Int -- ^ round number
-   [Game] -- ^ list of schedules games
-   [Player] -- ^ list of players getting bye in this round
+data RoundPairings = RoundPairings {
+     pRoundNo :: Int -- ^ round number
+   , pGames :: [Game] -- ^ list of schedules games
+   , pByes :: [Player] -- ^ list of players getting bye in this round
+   } deriving Show
 
 -- | Pretty printing for pairings (well, it's not actually very pretty, should eventually
 -- switch to some specific PP library).
