@@ -18,6 +18,10 @@ import System.Console.Shell
 import System.Console.Shell.Backend.Haskeline
 import System.Console.Shell.ShellMonad
 
+import Text.ParserCombinators.Parsec
+
+import Control.Monad.Trans( liftIO )
+
 data ShellState = ShellState [Player] Int
 
 -- shell interaction
@@ -30,6 +34,7 @@ cmds = [ exitCommand "quit"
        , cmd "add" addPlayerCmd "Adds a new player"
        , cmd "show" showPlayersCmd "Shows currently registered players"
        , cmd "rr" roundRobinCmd "Makes Round-Robin pairings"
+       , cmd "load" loadCmd "Loads players from file"
        ]
 
 addPlayerCmd :: String -> Sh ShellState ()
@@ -46,6 +51,32 @@ roundRobinCmd :: Sh ShellState ()
 roundRobinCmd = do
     (ShellState ps _) <- getShellSt
     mapM_ (shellPutStrLn . ppPairings) . RR.makePairingsForAllRounds $ ps
+
+loadCmd :: File -> Sh ShellState ()
+loadCmd (File f) = do
+    result <- liftIO $ parseFromFile players f
+    case result of
+        Left err -> shellPutStrLn (show err)
+        Right ps -> putShellSt (ShellState ps 0)
+
+players :: Parser [Player]
+players = sepEndBy player space >>= return
+
+player :: Parser Player
+player = do
+    id' <- number <?> "player ID"
+    char '.'
+    many space
+    name <- many1 (letter <|> char ' ' <|> char '.') <?> "player name"
+    char ','
+    many space
+    r <- number <?> "rating"
+    return $ Player id' name r Available
+
+number :: Parser Int
+number = do
+    digits <- many1 digit
+    return (read digits)
 
 shellDescr :: ShellDescription ShellState
 shellDescr = (mkShellDescription cmds react) {
