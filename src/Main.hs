@@ -27,23 +27,23 @@ react s = shellPutErrLn ("Unknown command: " ++ s)
 -- known commands
 cmds = [ exitCommand "quit"
        , helpCommand "help"
-       , cmd "add" addPlayerSF "Adds a new player"
-       , cmd "show" showPlayersSF "Shows currently registered players"
-       , cmd "rr" roundRobinSF "Makes Round-Robin pairings"
+       , cmd "add" addPlayerCmd "Adds a new player"
+       , cmd "show" showPlayersCmd "Shows currently registered players"
+       , cmd "rr" roundRobinCmd "Makes Round-Robin pairings"
        ]
 
-addPlayerSF :: String -> Sh ShellState ()
-addPlayerSF name = do
+addPlayerCmd :: String -> Sh ShellState ()
+addPlayerCmd name = do
     modifyShellSt (\(ShellState ps maxId) -> ShellState (Player (maxId + 1) name 1800 Available : ps) (maxId + 1))
     shellPutStrLn (name ++ " added")
 
-showPlayersSF :: Sh ShellState ()
-showPlayersSF = do
+showPlayersCmd :: Sh ShellState ()
+showPlayersCmd = do
     (ShellState ps _) <- getShellSt
     mapM_ (shellPutStrLn . show) ps
 
-roundRobinSF :: Sh ShellState ()
-roundRobinSF = do
+roundRobinCmd :: Sh ShellState ()
+roundRobinCmd = do
     (ShellState ps _) <- getShellSt
     mapM_ (shellPutStrLn . ppPairings) . RR.makePairingsForAllRounds $ ps
 
