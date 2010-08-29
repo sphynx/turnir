@@ -36,7 +36,7 @@ module RoundRobin(
     makePairingsForAllRounds -- ^ create pairings for all the rounds
 ) where
 
-import PairingEngine
+import Types
 import Data.List
 
 -- index used for "dummy player" and as a mark of bye

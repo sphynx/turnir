@@ -10,7 +10,7 @@
 -- | Module containing API for pairing engines, this should provide
 -- the interface both for engine writes and engine users.
 --
-module PairingEngine where
+module Types where
 
 -- | Different types of tournament play systems, includes various Swiss systems and RoundRobin
 data PlaySystem = DubovSwiss | DutchSwiss | LimSwiss | RoundRobin | DoubleRoundRobin

@@ -11,7 +11,7 @@
 
 module Main where
 
-import PairingEngine
+import Types
 import qualified RoundRobin as RR
 
 import System.Console.Shell

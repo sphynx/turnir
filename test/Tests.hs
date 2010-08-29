@@ -23,7 +23,7 @@ import Data.List
 import qualified Data.Map as M
 
 import RoundRobin
-import qualified PairingEngine as PE
+import Types
 
 main = defaultMain tests
 
@@ -34,7 +34,7 @@ tests = [ testGroup "Round Robin"
           ]
         ]
 -- generate n players
-players n = map (\i -> PE.Player i ('P' : show i) 1800 PE.Available) [1 .. n]
+players n = map (\i -> Player i ('P' : show i) 1800 Available) [1 .. n]
 
 pairings = makePairingsForAllRounds . players
 
@@ -42,13 +42,13 @@ pairings = makePairingsForAllRounds . players
 roundsNo = length . pairings
 
 -- number of games got from pairings list
-gamesNo = sum . map (\(PE.RoundPairings _ gs _) -> length gs) . pairings
+gamesNo = sum . map (\(RoundPairings _ gs _) -> length gs) . pairings
 
-games = concatMap PE.pGames . pairings
+games = concatMap pGames . pairings
 
 -- gives the number of games as white for each player, in the following form:
 -- Map.fromList [(P1,5),(P2,2),(P3,2),(P4,2),(P5,2),(P6,2)]
-whites = accumMapWith PE.white . games
+whites = accumMapWith white . games
 
 --
 -- | This function converts something like [7,2,2,2] in M.fromList [(7,1), (2,3)], showing
