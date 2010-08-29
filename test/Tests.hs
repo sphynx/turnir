@@ -48,15 +48,15 @@ games = concatMap pGames . pairings
 
 -- gives the number of games as white for each player, in the following form:
 -- Map.fromList [(P1,5),(P2,2),(P3,2),(P4,2),(P5,2),(P6,2)]
-whites = accumMapWith white . games
+whites = countWith white . games
 
 --
 -- | This function converts something like [7,2,2,2] in M.fromList [(7,1), (2,3)], showing
 -- quantity of occurenses element in given list.
--- @f@ is a function to transform the list elements before grouping.
+-- @f@ is a function to transform the list elements before counting.
 --
-accumMapWith :: (Ord a, Eq a) => (b -> a) -> [b] -> M.Map a Int
-accumMapWith f = foldl' accF M.empty
+countWith :: (Ord a, Eq a) => (b -> a) -> [b] -> M.Map a Int
+countWith f = foldl' accF M.empty
     where accF map x = M.insertWith' (+) (f x) 1 map
 
 -- rounds number is equal to 1) N if N is even 2) N - 1 if N is odd -- due to byes
