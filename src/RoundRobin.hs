@@ -65,6 +65,10 @@ rr n = map (uncurry zip) . take rounds . iterate rotate . round1 $ n
     -- the number is odd then every player has to skip one round having a bye).
     where rounds = if even n then n - 1 else n
 
+-- adds ID for each pair, starting from 1
+enumeratePairs :: [[(Int, Int)]] -> [[(Int, (Int, Int))]]
+enumeratePairs = snd . mapAccumL (\id pairs -> (id + length pairs, zip [id..] pairs)) 1
+
 -- to get fair color distribution we have to flip colors of the first player in each round,
 -- otherwise fixed 1st player always gets white. We do this with help of mapAccumL
 -- keeping track of index @i@ and checking if it's even
@@ -74,15 +78,15 @@ flipColorsInEvenRounds = snd . mapAccumL (\i pairs -> (i + 1, flipColors i pairs
           flipColor p@(p1, p2) = if p1 == 1 then (p2, 1) else p
 
 -- makes pairings for one round with actual players using indexes provided
-mkRoundPairings :: Int -> [Player] -> [(Int, Int)] -> RoundPairings
+mkRoundPairings :: Int -> [Player] -> [(Int, (Int, Int))] -> RoundPairings
 mkRoundPairings n ps pairs = RoundPairings n games byes
-    where (bye, normal) = partition (\(x, y) -> x == byeMark || y == byeMark) pairs
+    where (bye, normal) = partition (\(_, (x, y)) -> x == byeMark || y == byeMark) pairs
           player x = ps !! (x - 1)
-          byes = map (\(x, y) -> if x == 0 then player y else player x) bye
-          games = map (\(x, y) -> Game 0 (player x) (player y) NotStarted) normal
+          byes = map (\(_, (x, y)) -> if x == 0 then player y else player x) bye
+          games = map (\(gid, (x, y)) -> Game gid (player x) (player y) NotStarted) normal
 
 -- actually makes all the pairings with players
 makePairingsForAllRounds :: [Player] -> Pairings
 makePairingsForAllRounds ps =
-    map (\(no, pairs) -> mkRoundPairings no ps pairs) . zip [1..] . flipColorsInEvenRounds . rr $ n
+    map (\(no, pairs) -> mkRoundPairings no ps pairs) . zip [1..] . enumeratePairs . flipColorsInEvenRounds . rr $ n
         where n = length ps

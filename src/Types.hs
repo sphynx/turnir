@@ -79,7 +79,7 @@ data RoundPairings = RoundPairings {
 -- switch to some specific PP library).
 ppPairings (RoundPairings n games byes) =
     "Round " ++ show n ++ "\n\n" ++ showPairs games ++ showByes byes ++ "\n"
-    where showPairs = concatMap (\(Game _ p1 p2 _) -> show p1 ++ " - " ++ show p2 ++ "\n")
+    where showPairs = concatMap (\(Game gid p1 p2 _) -> show gid ++ ": " ++ show p1 ++ " - " ++ show p2 ++ "\n")
           showByes [] = ""
           showByes bs = "bye: " ++ concatMap (\p -> show p ++ " ") bs
 
