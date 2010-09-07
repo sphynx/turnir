@@ -75,8 +75,7 @@ loadCmd (File f) = do
 setResultCmd :: Int -> String -> Sh ShellState ()
 setResultCmd gid res = do
     st <- getShellSt
-    --let pairings = setGameResult gid (parseGameResult res) (stPairings st)
-    let table = stTable st -- stub
+    let table = setGameResult gid (parseGameResult res) (stTable st)
     modifyShellSt (\st -> st { stTable = table })
 
 players :: Parser [Player]

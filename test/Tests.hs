@@ -32,6 +32,9 @@ tests = [ testGroup "Round Robin"
           , testProperty "Number of RR games " propGamesNumber
           , testProperty "Number of games played as white " propWhiteGames
           ]
+        , testGroup "Score table"
+          [ testCase "Set game result" caseSetGameResult
+          ]
         ]
 -- generate n players
 players n = map (\i -> Player i ('P' : show i) 1800 Available) [1 .. n]
@@ -70,3 +73,5 @@ propWhiteGames = forAll (choose (2, 16)) $ \x ->
    let pred = if odd x then \y -> y /= x `div` 2
                        else \y -> y /= x `div` 2 && y /= (x `div` 2) - 1
    in M.null $ M.filter pred $ whites x
+
+caseSetGameResult = 1 @=? 1 -- stub

@@ -22,10 +22,10 @@ data PlaySystem = DubovSwiss | DutchSwiss | LimSwiss | RoundRobin | DoubleRoundR
 data TieBreak = Buchholz | Berger
 
 -- | Scores represent the quantity of points awarded for the win, draw and loss
-data ScoreType = Classic
-                 -- ^ 1 for win, 1/2 for draw, 0 for loss
-               | Score Int Int Int
-                 -- ^ any other possible scores in the following order (win, draw, loss)
+data ScoreType = ScoreType
+                 Float -- ^ win
+                 Float -- ^ draw
+                 Float -- ^ loss
 
 -- | All the data about player needed for engines to work properly, includes ID, names, rating and status
 data Player = Player
@@ -75,6 +75,18 @@ maxRound :: Table -> Int
 maxRound [] = 0
 maxRound t = maximum . map roundId $ t
 
+playerGames :: Player -> Table -> [Game]
+playerGames p = filter (\g -> p == white g || p == black g)
+
+playerScore :: Player -> Game -> Float
+playerScore p g
+  | white g == p = result2points . gameResult $ g
+  | black g == p = result2points . resultNegate . gameResult $ g
+  | otherwise = 0
+
+playerTotal :: Player -> Table -> Float
+playerTotal p = sum . map (playerScore p) . playerGames p
+
 -- | Game along with its participants and result
 data Game = Game
     { gameId :: GameID -- ^ ID of the game
@@ -88,8 +100,39 @@ instance Ord Game where
     g1 <= g2 = gameId g1 <= gameId g2
 
 -- | Game result. Besides usual win/draw/loss, there are a couple of non-standard results involded
-data GameResult = NotStarted | Win | Loss | Draw | Adjourned | Cancelled | ForfeitWin | ForfeitLoss
+data GameResult = NotStarted | Win | Loss | Draw | Adjourned | Cancelled | ForfeitWin | ForfeitLoss | ForfeitDraw
                 deriving (Show, Eq)
+
+data GameScore = NoPoints | PartOfPoints | AllPoints
+
+result2score :: GameResult -> GameScore
+result2score NotStarted = NoPoints
+result2score Win = AllPoints
+result2score Loss = NoPoints
+result2score Draw = PartOfPoints
+result2score Adjourned = NoPoints
+result2score Cancelled = NoPoints
+result2score ForfeitWin = AllPoints
+result2score ForfeitLoss = NoPoints
+result2score ForfeitDraw = PartOfPoints
+
+resultNegate :: GameResult -> GameResult
+resultNegate Win = Loss
+resultNegate Loss = Win
+resultNegate ForfeitWin = ForfeitLoss
+resultNegate ForfeitLoss = ForfeitWin
+resultNegate x = x
+
+score2points :: ScoreType -> GameScore -> Float
+score2points (ScoreType w _ _) AllPoints = w
+score2points (ScoreType _ d _) PartOfPoints = d
+score2points (ScoreType _ _ l) NoPoints = l
+
+classicScore :: ScoreType
+classicScore = ScoreType 1 0.5 0
+
+result2points :: GameResult -> Float
+result2points = score2points classicScore . result2score
 
 parseGameResult :: String -> GameResult
 parseGameResult "1" = Win
