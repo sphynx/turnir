@@ -147,13 +147,13 @@ setGameResult gid result t = updateGames gid result t
     updateGames _ _ [] = []
     updateGames gid res (g:gs) = if (gameId g == gid)
                                  then g {gameResult = result} : gs
-                                 else updateGames gid res gs
+                                 else g : updateGames gid res gs
 
 -- | Pretty printing for round games (well, it's not actually very pretty, should eventually
 -- switch to some specific PP library).
 ppRound r ps table =
     "Round " ++ show r ++ "\n\n" ++ showPairs games ++ showByes byes ++ "\n"
-    where showPairs = concatMap (\(Game gid _ p1 p2 _) -> show gid ++ ": " ++ show p1 ++ " - " ++ show p2 ++ "\n")
+    where showPairs = concatMap (\(Game gid _ p1 p2 res) -> show gid ++ ": " ++ show p1 ++ " - " ++ show p2 ++ " (" ++ show res ++ ")\n")
           showByes [] = ""
           showByes bs = "bye: " ++ concatMap (\p -> show p ++ " ") bs
           games = roundGames r table
