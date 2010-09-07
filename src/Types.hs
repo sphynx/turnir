@@ -68,12 +68,28 @@ instance Ord Game where
 data GameResult = NotStarted | Win | Loss | Draw | Adjourned | Cancelled | ForfeitWin | ForfeitLoss
                 deriving (Show, Eq)
 
+parseGameResult :: String -> GameResult
+parseGameResult "1" = Win
+parseGameResult "0" = Loss
+parseGameResult "1/2" = Draw
+parseGameResult "0.5" = Draw
+parseGameResult _ = NotStarted
+
 -- | Represents pairings for one round
 data RoundPairings = RoundPairings {
      pRoundNo :: Int -- ^ round number
    , pGames :: [Game] -- ^ list of schedules games
    , pByes :: [Player] -- ^ list of players getting bye in this round
    } deriving Show
+
+setGameResult :: GameID -> GameResult -> RoundPairings -> RoundPairings
+setGameResult gid result pairings = pairings { pGames = games }
+  where
+    games = updateGames gid result (pGames pairings)
+    updateGames _ _ [] = []
+    updateGames gid res (g:gs) = if (gameId g == gid)
+                                 then g {gameResult = result} : gs
+                                 else updateGames gid res gs
 
 -- | Pretty printing for pairings (well, it's not actually very pretty, should eventually
 -- switch to some specific PP library).
@@ -84,17 +100,3 @@ ppPairings (RoundPairings n games byes) =
           showByes bs = "bye: " ++ concatMap (\p -> show p ++ " ") bs
 
 type Pairings = [RoundPairings]
-
--- | Pairing engine itself
-data PairingEngine st = PairingEngine
-    -- ^ engine state passed as a parameter, it will be initialized during @initEngine@
-   { initEngine    :: [Player] -> TournamentParams -> st
-                   -- ^ Initializes the engine with players list and tournament parameters
-
-   , makePairings  :: st -> Maybe Int -> Pairings
-                   -- ^ Make pairings for given round (for example @Just 2@) or
-                   -- for all the rounds (@None@)
-
-   , setGameResult :: st -> GameID -> GameResult
-                   -- ^ Sets the game result for the sheduled game
-   }

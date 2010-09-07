@@ -40,6 +40,7 @@ cmds = [ exitCommand "quit"
        , cmd "showpairings" showPairingsCmd "Shows calculated pairings"
        , cmd "rr" roundRobinCmd "Makes Round-Robin pairings"
        , cmd "load" loadCmd "Loads players from file"
+       , cmd "result" setResultCmd "Set result of the game. Usage: set <gameId> <result> (0, 1/2, 1, etc.)"
        ]
 
 addPlayerCmd :: String -> Sh ShellState ()
@@ -68,6 +69,13 @@ loadCmd (File f) = do
     case result of
         Left err -> shellPutStrLn (show err)
         Right ps -> putShellSt (ShellState ps 0 [])
+
+setResultCmd :: Int -> String -> Sh ShellState ()
+setResultCmd gid res = do
+    st <- getShellSt
+    --let pairings = setGameResult gid (parseGameResult res) (stPairings st)
+    let pairings = stPairings st -- stub
+    modifyShellSt (\st -> st { stPairings = pairings })
 
 players :: Parser [Player]
 players = sepEndBy player space >>= return
