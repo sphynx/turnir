@@ -36,15 +36,14 @@ tests = [ testGroup "Round Robin"
 -- generate n players
 players n = map (\i -> Player i ('P' : show i) 1800 Available) [1 .. n]
 
-pairings = makePairingsForAllRounds . players
+-- generated games
+games = makePairingsForAllRounds . players
 
 -- number of rounds got from pairings list
-roundsNo = length . pairings
+roundsNo = maxRound . games
 
 -- number of games got from pairings list
-gamesNo = sum . map (\(RoundPairings _ gs _) -> length gs) . pairings
-
-games = concatMap pGames . pairings
+gamesNo = length . games
 
 -- gives the number of games as white for each player, in the following form:
 -- Map.fromList [(P1,5),(P2,2),(P3,2),(P4,2),(P5,2),(P6,2)]
@@ -60,10 +59,10 @@ countWith f = foldl' accF M.empty
     where accF map x = M.insertWith' (+) (f x) 1 map
 
 -- rounds number is equal to 1) N if N is even 2) N - 1 if N is odd -- due to byes
-propRoundsNumber = forAll (choose (1, 10)) $ \n -> roundsNo n == (if even n then n - 1 else n)
+propRoundsNumber = forAll (choose (2, 20)) $ \n -> roundsNo n == (if even n then n - 1 else n)
 
 -- games number is equal to N * (N-1) / 2
-propGamesNumber = forAll (choose (1, 10)) $ \n -> gamesNo n == (n * (n - 1)) `div` 2
+propGamesNumber = forAll (choose (1, 20)) $ \n -> gamesNo n == (n * (n - 1)) `div` 2
 
 -- a number of games played as white should be fairly distributes
 -- that is, each player should play play near half of games as white

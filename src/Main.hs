@@ -25,7 +25,7 @@ import Control.Monad.Trans( liftIO )
 data ShellState = ShellState {
       stPlayers :: [Player]
     , stMaxPlayerId :: Int
-    , stPairings :: Pairings
+    , stTable :: Table
     }
 
 -- shell interaction
@@ -46,22 +46,24 @@ cmds = [ exitCommand "quit"
 addPlayerCmd :: String -> Sh ShellState ()
 addPlayerCmd name = do
     modifyShellSt
-      (\(ShellState ps maxId pairs) ->
-        ShellState (Player (maxId + 1) name 1800 Available : ps) (maxId + 1) pairs)
+      (\(ShellState ps maxId t) ->
+        ShellState (Player (maxId + 1) name 1800 Available : ps) (maxId + 1) t)
     shellPutStrLn (name ++ " added")
 
 showPlayersCmd :: Sh ShellState ()
 showPlayersCmd = getShellSt >>= mapM_ (shellPutStrLn . show) . stPlayers
 
 showPairingsCmd :: Sh ShellState ()
-showPairingsCmd = getShellSt >>= mapM_ (shellPutStrLn . ppPairings) . stPairings
+showPairingsCmd = do
+  st <- getShellSt
+  mapM_ shellPutStrLn . ppTable (stPlayers st) . stTable $ st
 
 roundRobinCmd :: Sh ShellState ()
 roundRobinCmd = do
     st <- getShellSt
     let pairings = RR.makePairingsForAllRounds . stPlayers $ st
-    mapM_ (shellPutStrLn . ppPairings) pairings
-    modifyShellSt (\st -> st { stPairings = pairings })
+    mapM_ shellPutStrLn (ppTable (stPlayers st) pairings)
+    modifyShellSt (\st -> st { stTable = pairings })
 
 loadCmd :: File -> Sh ShellState ()
 loadCmd (File f) = do
@@ -74,8 +76,8 @@ setResultCmd :: Int -> String -> Sh ShellState ()
 setResultCmd gid res = do
     st <- getShellSt
     --let pairings = setGameResult gid (parseGameResult res) (stPairings st)
-    let pairings = stPairings st -- stub
-    modifyShellSt (\st -> st { stPairings = pairings })
+    let table = stTable st -- stub
+    modifyShellSt (\st -> st { stTable = table })
 
 players :: Parser [Player]
 players = sepEndBy player space >>= return

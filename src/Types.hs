@@ -12,6 +12,8 @@
 --
 module Types where
 
+import Data.List
+
 -- | Different types of tournament play systems, includes various Swiss systems and RoundRobin
 data PlaySystem = DubovSwiss | DutchSwiss | LimSwiss | RoundRobin | DoubleRoundRobin
 
@@ -53,16 +55,37 @@ data TournamentParams = TParams
     , scoreType :: ScoreType -- ^ type of scoring used
     }
 
+-- | Tournament itself.
+data Tournament = Tournament
+    { tPlayers :: [Player] -- ^ list of players
+    , tTable :: Table -- ^ score table
+    , params :: TournamentParams -- ^ params of the tourney
+    }
+
+-- | Tournament table is represented as list of the games
+type Table = [Game]
+
+roundGames :: Int -> Table -> [Game]
+roundGames r = filter (\g -> r == roundId g)
+
+roundByes :: Int -> [Player] -> Table -> [Player]
+roundByes r ps = (ps \\) . concatMap (\g -> [white g, black g]) . roundGames r
+
+maxRound :: Table -> Int
+maxRound [] = 0
+maxRound t = maximum . map roundId $ t
+
 -- | Game along with its participants and result
 data Game = Game
     { gameId :: GameID -- ^ ID of the game
+    , roundId :: Int -- ^ number of the round
     , white :: Player -- ^ white player
     , black :: Player -- ^ black player
     , gameResult :: GameResult -- ^ result of the game
     } deriving (Eq, Show)
 type GameID = Int
 instance Ord Game where
-    (Game gid1 _ _ _) <= (Game gid2 _ _ _) = gid1 <= gid2
+    g1 <= g2 = gameId g1 <= gameId g2
 
 -- | Game result. Besides usual win/draw/loss, there are a couple of non-standard results involded
 data GameResult = NotStarted | Win | Loss | Draw | Adjourned | Cancelled | ForfeitWin | ForfeitLoss
@@ -75,28 +98,23 @@ parseGameResult "1/2" = Draw
 parseGameResult "0.5" = Draw
 parseGameResult _ = NotStarted
 
--- | Represents pairings for one round
-data RoundPairings = RoundPairings {
-     pRoundNo :: Int -- ^ round number
-   , pGames :: [Game] -- ^ list of schedules games
-   , pByes :: [Player] -- ^ list of players getting bye in this round
-   } deriving Show
-
-setGameResult :: GameID -> GameResult -> RoundPairings -> RoundPairings
-setGameResult gid result pairings = pairings { pGames = games }
+setGameResult :: GameID -> GameResult -> Table -> Table
+setGameResult gid result t = updateGames gid result t
   where
-    games = updateGames gid result (pGames pairings)
     updateGames _ _ [] = []
     updateGames gid res (g:gs) = if (gameId g == gid)
                                  then g {gameResult = result} : gs
                                  else updateGames gid res gs
 
--- | Pretty printing for pairings (well, it's not actually very pretty, should eventually
+-- | Pretty printing for round games (well, it's not actually very pretty, should eventually
 -- switch to some specific PP library).
-ppPairings (RoundPairings n games byes) =
-    "Round " ++ show n ++ "\n\n" ++ showPairs games ++ showByes byes ++ "\n"
-    where showPairs = concatMap (\(Game gid p1 p2 _) -> show gid ++ ": " ++ show p1 ++ " - " ++ show p2 ++ "\n")
+ppRound r ps table =
+    "Round " ++ show r ++ "\n\n" ++ showPairs games ++ showByes byes ++ "\n"
+    where showPairs = concatMap (\(Game gid _ p1 p2 _) -> show gid ++ ": " ++ show p1 ++ " - " ++ show p2 ++ "\n")
           showByes [] = ""
           showByes bs = "bye: " ++ concatMap (\p -> show p ++ " ") bs
+          games = roundGames r table
+          byes = roundByes r ps table
 
-type Pairings = [RoundPairings]
+ppTable ps table =
+    map (\r -> ppRound r ps table) [1 .. (maxRound table)]

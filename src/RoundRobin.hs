@@ -1,4 +1,4 @@
--- Td-tool -- a tool for tournament management.
+-- td-tool -- a tool for tournament management.
 --
 -- Author : Ivan N. Veselov
 -- Created: 24-Aug-2010
@@ -77,16 +77,16 @@ flipColorsInEvenRounds = snd . mapAccumL (\i pairs -> (i + 1, flipColors i pairs
     where flipColors i pairs = if even i then pairs else map flipColor pairs
           flipColor p@(p1, p2) = if p1 == 1 then (p2, 1) else p
 
+-- removes pairs with zero (this is considered as a bye -- a player missing his game this round)
+removeByes :: [[(Int, Int)]] -> [[(Int, Int)]]
+removeByes = map (filter (\ (x, y) -> x * y /= 0))
+
 -- makes pairings for one round with actual players using indexes provided
-mkRoundPairings :: Int -> [Player] -> [(Int, (Int, Int))] -> RoundPairings
-mkRoundPairings n ps pairs = RoundPairings n games byes
-    where (bye, normal) = partition (\(_, (x, y)) -> x == byeMark || y == byeMark) pairs
-          player x = ps !! (x - 1)
-          byes = map (\(_, (x, y)) -> if x == 0 then player y else player x) bye
-          games = map (\(gid, (x, y)) -> Game gid (player x) (player y) NotStarted) normal
+mkRoundPairings :: Int -> [Player] -> [(Int, (Int, Int))] -> [Game]
+mkRoundPairings n ps pairs = map (\(gid, (x, y)) -> Game gid n (player x) (player y) NotStarted) pairs
+    where player x = ps !! (x - 1)
 
 -- actually makes all the pairings with players
-makePairingsForAllRounds :: [Player] -> Pairings
-makePairingsForAllRounds ps =
-    map (\(no, pairs) -> mkRoundPairings no ps pairs) . zip [1..] . enumeratePairs . flipColorsInEvenRounds . rr $ n
-        where n = length ps
+makePairingsForAllRounds :: [Player] -> Table
+makePairingsForAllRounds ps = concatMap (\(no, pairs) -> mkRoundPairings no ps pairs) .
+    zip [1..] . enumeratePairs . removeByes . flipColorsInEvenRounds . rr . length $ ps
