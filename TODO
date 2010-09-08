@@ -1,10 +1,8 @@
 + implement round-robin with alternating colors
 + load players from file
++ handle game result setting and displaying
 - round-by-round pairings generation
 - common API for pairing engines
-- save and edit pairings
-- review data structures
-- handle game result setting and displaying
 - add basic Swiss system pairings
 - add DB/file saving and loading
 - add commands for editing, removing, saving, loading, etc.
