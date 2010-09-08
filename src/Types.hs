@@ -87,6 +87,9 @@ playerScore p g
 playerTotal :: Player -> Table -> Float
 playerTotal p = sum . map (playerScore p) . playerGames p
 
+gameById :: GameID -> Table -> Game
+gameById gid = head . filter (\g -> gameId g == gid)
+
 -- | Game along with its participants and result
 data Game = Game
     { gameId :: GameID -- ^ ID of the game

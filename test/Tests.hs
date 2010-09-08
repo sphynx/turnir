@@ -34,6 +34,7 @@ tests = [ testGroup "Round Robin"
           ]
         , testGroup "Score table"
           [ testCase "Set game result" caseSetGameResult
+          , testCase "Set game result 2" caseSetGameResult2
           ]
         ]
 -- generate n players
@@ -51,6 +52,8 @@ gamesNo = length . games
 -- gives the number of games as white for each player, in the following form:
 -- Map.fromList [(P1,5),(P2,2),(P3,2),(P4,2),(P5,2),(P6,2)]
 whites = countWith white . games
+
+
 
 --
 -- | This function converts something like [7,2,2,2] in M.fromList [(7,1), (2,3)], showing
@@ -74,4 +77,5 @@ propWhiteGames = forAll (choose (2, 16)) $ \x ->
                        else \y -> y /= x `div` 2 && y /= (x `div` 2) - 1
    in M.null $ M.filter pred $ whites x
 
-caseSetGameResult = 1 @=? 1 -- stub
+caseSetGameResult = (gameResult . gameById 1 . setGameResult 1 Win $ (games 4)) @?= Win
+caseSetGameResult2 = (gameResult . gameById 2 . setGameResult 2 Loss $ (games 4)) @?= Loss
