@@ -1,4 +1,4 @@
--- td-tool -- a tool for tournament management.
+-- Turnir -- a tool for tournament management.
 --
 -- Author : Ivan N. Veselov
 -- Created: 24-Aug-2010

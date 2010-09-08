@@ -1,4 +1,4 @@
--- Td-tool -- a tool for tournament management.
+-- Turnir -- a tool for tournament management.
 --
 -- Author : Ivan N. Veselov
 -- Created: 23-Aug-2010
@@ -100,7 +100,7 @@ number = do
 shellDescr :: ShellDescription ShellState
 shellDescr = (mkShellDescription cmds react) {
       commandStyle = OnlyCommands
-    , greetingText = Just "Welcome to td-tool v0.1, mister tournament director!\n"
+    , greetingText = Just "Welcome to turnir v0.1, mister tournament director!\n"
     }
 
 main :: IO ()

@@ -1,4 +1,4 @@
--- Td-tool -- a tool for tournament management.
+-- Turnir -- a tool for tournament management.
 --
 -- Author : Ivan N. Veselov
 -- Created: 24-Aug-2010
@@ -79,3 +79,4 @@ propWhiteGames = forAll (choose (2, 16)) $ \x ->
 
 caseSetGameResult = (gameResult . gameById 1 . setGameResult 1 Win $ (games 4)) @?= Win
 caseSetGameResult2 = (gameResult . gameById 2 . setGameResult 2 Loss $ (games 4)) @?= Loss
+
