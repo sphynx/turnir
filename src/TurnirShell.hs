@@ -15,44 +15,42 @@ module TurnirShell(
 
 import Types
 import Parser
+import ShellUtils
 import qualified RoundRobin as RR
 
 import System.Console.Shell
 import System.Console.Shell.Backend.Haskeline
 import System.Console.Shell.ShellMonad
 
+import Data.IORef
+
 import Control.Monad.Trans(liftIO)
 
+-- main shell state datatype
 data ShellState = ShellState {
       stPlayers :: [Player]
     , stMaxPlayerId :: Int
     , stTable :: Table
     }
 
--- shell interaction
-react :: String -> Sh ShellState ()
-react s = shellPutErrLn ("Unknown command: " ++ s)
+-- main shell description
+mkShellDescr :: ShellDescription ShellState
+mkShellDescr = (mkShellDescription cmds react) {
+      commandStyle = OnlyCommands
+    , greetingText = Just "Welcome to Turnir v0.1, mister tournament director!\n"
+    }
 
--- known commands
+-- main shell commands
 cmds = [ exitCommand "quit"
        , helpCommand "help"
-       , cmd "add" addPlayerCmd "Adds a new player"
-       , cmd "showplayers" showPlayersCmd "Shows currently registered players"
+       , cmd "players" playersCmd "Launch players subshell"
        , cmd "showpairings" showPairingsCmd "Shows calculated pairings"
        , cmd "rr" roundRobinCmd "Makes Round-Robin pairings"
-       , cmd "load" loadCmd "Loads players from file"
        , cmd "result" setResultCmd "Set result of the game. Usage: set <gameId> <result> (0, 1/2, 1, etc.)"
        ]
 
-addPlayerCmd :: String -> Sh ShellState ()
-addPlayerCmd name = do
-    modifyShellSt
-      (\(ShellState ps maxId t) ->
-        ShellState (Player (maxId + 1) name 1800 Available : ps) (maxId + 1) t)
-    shellPutStrLn (name ++ " added")
-
-showPlayersCmd :: Sh ShellState ()
-showPlayersCmd = getShellSt >>= mapM_ (shellPutStrLn . show) . stPlayers
+playersCmd :: Sh ShellState ()
+playersCmd = runSubshell playersSubshell
 
 showPairingsCmd :: Sh ShellState ()
 showPairingsCmd = do
@@ -66,29 +64,75 @@ roundRobinCmd = do
     mapM_ shellPutStrLn (ppTable (stPlayers st) pairings)
     modifyShellSt (\st -> st { stTable = pairings })
 
-loadCmd :: File -> Sh ShellState ()
-loadCmd (File f) = do
-    result <- liftIO $ parsePlayers f
-    case result of
-        Left err -> shellPutStrLn (show err)
-        Right ps -> putShellSt (ShellState ps 0 [])
-
 setResultCmd :: Int -> String -> Sh ShellState ()
 setResultCmd gid res = do
     st <- getShellSt
     let table = setGameResult gid (parseGameResult res) (stTable st)
     modifyShellSt (\st -> st { stTable = table })
 
-shellDescr :: ShellDescription ShellState
-shellDescr = (mkShellDescription cmds react) {
-      commandStyle = OnlyCommands
-    , greetingText = Just "Welcome to Turnir v0.1, mister tournament director!\n"
+-- players shell state
+data PlayersShellState = PlayersShellState {
+      playersList :: [Player]
+    , playersMaxId :: Int
     }
 
+-- players shell description
+mkPlayersDescr :: ShellDescription PlayersShellState
+mkPlayersDescr = (mkShellDescription playersCmds react) {
+      commandStyle = OnlyCommands
+    , prompt = \_ -> return "players> "
+}
+
+-- players shell commands
+playersCmds :: [ShellCommand PlayersShellState]
+playersCmds = [
+      cmd "add" addPlayer "add player"
+    , cmd "print" printPlayers "print registered players"
+    , cmd "load " loadPlayers "load players from file"
+    , helpCommand "help"
+    , helpCommand "?"
+    , exitCommand "quit"
+    ]
+
+addPlayer :: String -> Sh PlayersShellState ()
+addPlayer name = do
+    modifyShellSt
+      (\(PlayersShellState ps maxId) ->
+        PlayersShellState (Player (maxId + 1) name 1800 Available : ps) (maxId + 1))
+    shellPutStrLn (name ++ " added")
+
+printPlayers :: Sh PlayersShellState ()
+printPlayers = getShellSt >>= mapM_ (shellPutStrLn . show) . playersList
+
+loadPlayers :: File -> Sh PlayersShellState ()
+loadPlayers (File f) = do
+    result <- liftIO $ parsePlayers f
+    case result of
+        Left err -> shellPutStrLn (show err)
+        Right ps -> putShellSt (PlayersShellState ps 0)
+
+passPlayersState :: ShellState -> IO PlayersShellState
+passPlayersState st =
+   return PlayersShellState
+          { playersList = stPlayers st
+          , playersMaxId = stMaxPlayerId st
+          }
+
+returnPlayersState :: PlayersShellState -> ShellState -> IO ShellState
+returnPlayersState pst st =
+   return st
+          { stPlayers = playersList pst
+          , stMaxPlayerId = playersMaxId pst
+          }
+
+playersSubshell :: IO (Subshell ShellState PlayersShellState)
+playersSubshell = simpleSubshellWithState passPlayersState returnPlayersState mkPlayersDescr
+
+-- interaction
+react s = shellPutErrLn ("Unknown command: " ++ s)
+
+-- run main shell
 run :: IO ()
 run = do
-    runShell shellDescr haskelineBackend (ShellState [] 0 [])
+    runShell mkShellDescr haskelineBackend (ShellState [] 0 [])
     return ()
-
-
-
