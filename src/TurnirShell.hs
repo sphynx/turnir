@@ -8,11 +8,14 @@
 -- License: BSD3
 --
 -- | Shell module, provides interaction with the user.
-module TurnirShell where
+
+module TurnirShell(
+  run -- ^ run the shell
+) where
 
 import Types
-import qualified RoundRobin as RR
 import Parser
+import qualified RoundRobin as RR
 
 import System.Console.Shell
 import System.Console.Shell.Backend.Haskeline
@@ -79,7 +82,7 @@ setResultCmd gid res = do
 shellDescr :: ShellDescription ShellState
 shellDescr = (mkShellDescription cmds react) {
       commandStyle = OnlyCommands
-    , greetingText = Just "Welcome to turnir v0.1, mister tournament director!\n"
+    , greetingText = Just "Welcome to Turnir v0.1, mister tournament director!\n"
     }
 
 run :: IO ()
