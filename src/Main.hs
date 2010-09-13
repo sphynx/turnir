@@ -13,12 +13,11 @@ module Main where
 
 import Types
 import qualified RoundRobin as RR
+import Parser
 
 import System.Console.Shell
 import System.Console.Shell.Backend.Haskeline
 import System.Console.Shell.ShellMonad
-
-import Text.ParserCombinators.Parsec
 
 import Control.Monad.Trans( liftIO )
 
@@ -67,7 +66,7 @@ roundRobinCmd = do
 
 loadCmd :: File -> Sh ShellState ()
 loadCmd (File f) = do
-    result <- liftIO $ parseFromFile players f
+    result <- liftIO $ parsePlayers f
     case result of
         Left err -> shellPutStrLn (show err)
         Right ps -> putShellSt (ShellState ps 0 [])
@@ -77,25 +76,6 @@ setResultCmd gid res = do
     st <- getShellSt
     let table = setGameResult gid (parseGameResult res) (stTable st)
     modifyShellSt (\st -> st { stTable = table })
-
-players :: Parser [Player]
-players = sepEndBy player space >>= return
-
-player :: Parser Player
-player = do
-    id' <- number <?> "player ID"
-    char '.'
-    many space
-    name <- many1 (letter <|> char ' ' <|> char '.') <?> "player name"
-    char ','
-    many space
-    r <- number <?> "rating"
-    return $ Player id' name r Available
-
-number :: Parser Int
-number = do
-    digits <- many1 digit
-    return (read digits)
 
 shellDescr :: ShellDescription ShellState
 shellDescr = (mkShellDescription cmds react) {
