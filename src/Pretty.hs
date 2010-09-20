@@ -29,6 +29,7 @@ dash :: Doc
 dash = char '-'
 
 -- pretty-printing
+-- | Prints one round information
 ppRound :: Int -> [Player] -> Table -> Doc
 ppRound r ps table = (t "Round" <+> int r) $$ nest o (ppPairs games) $$ nest o (ppByes byes)
     where ppPairs = vcat . map ppGame
@@ -40,6 +41,8 @@ ppRound r ps table = (t "Round" <+> int r) $$ nest o (ppPairs games) $$ nest o (
           byes = roundByes r ps table
           o = 2 -- outline of games
 
+-- | Pretty-prints tournament table, using players list
+ppTable :: [Player] -> Table -> Doc
 ppTable ps table =
     vcat . map (\r -> ppRound r ps table) $ [1 .. maxRound table]
 
