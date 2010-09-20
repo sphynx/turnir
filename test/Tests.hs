@@ -54,10 +54,8 @@ gamesNo = length . games
 -- Map.fromList [(P1,5),(P2,2),(P3,2),(P4,2),(P5,2),(P6,2)]
 whites = countWith white . games
 
-
-
 --
--- | This function converts something like [7,2,2,2] in M.fromList [(7,1), (2,3)], showing
+-- This function converts something like [7,2,2,2] in M.fromList [(7,1), (2,3)], showing
 -- quantity of occurenses element in given list.
 -- @f@ is a function to transform the list elements before counting.
 --
@@ -81,3 +79,5 @@ propWhiteGames = forAll (choose (2, 16)) $ \x ->
 caseSetGameResult = (gameResult . gameById 1 . setGameResult 1 Win $ (games 4)) @?= Win
 caseSetGameResult2 = (gameResult . gameById 2 . setGameResult 2 Loss $ (games 4)) @?= Loss
 
+-- to test pretty-printing
+pp = ppTable (players 5) (games 5)

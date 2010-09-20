@@ -18,7 +18,10 @@ import Text.PrettyPrint.HughesPJ
 
 import Types
 
--- helper functions
+--
+-- Helper functions
+--
+
 t :: String -> Doc
 t = text
 
@@ -28,15 +31,22 @@ tt = t . show
 dash :: Doc
 dash = char '-'
 
--- pretty-printing
+--
+-- Pretty-printing
+--
+
 -- | Prints one round information
 ppRound :: Int -> [Player] -> Table -> Doc
-ppRound r ps table = (t "Round" <+> int r) $$ nest o (ppPairs games) $$ nest o (ppByes byes)
+ppRound r ps table = vcat [ t "Round" <+> int r
+                          , nest o (ppPairs games)
+                          , nest o (ppByes byes)
+                          , space
+                          ]
     where ppPairs = vcat . map ppGame
           ppGame (Game gid _ p1 p2 res) =
-            hsep [int gid <> colon, tt p1, dash, tt p2, parens . tt $ res]
+              hsep [int gid <> colon, tt p1, dash, tt p2, parens . tt $ res]
           ppByes [] = empty
-          ppByes bs = hsep . (t "bye: " :) . punctuate space . map tt $ bs
+          ppByes bs = hsep . (t "bye:" :) . map tt $ bs
           games = roundGames r table
           byes = roundByes r ps table
           o = 2 -- outline of games
