@@ -25,11 +25,19 @@ import Types
 t :: String -> Doc
 t = text
 
-tt :: Show a => a -> Doc
-tt = t . show
+pp :: Show a => a -> Doc
+pp = t . show
 
-dash :: Doc
 dash = char '-'
+plus = char '+'
+pipe = char '|'
+
+vpunctuate :: Doc -> [Doc] -> [Doc]
+vpunctuate p []     = []
+vpunctuate p (d:ds) = go d ds
+    where
+       go d [] = [d]
+       go d (e:es) = (d $$ p) : go e es
 
 --
 -- Pretty-printing
@@ -38,15 +46,15 @@ dash = char '-'
 -- | Prints one round information
 ppRound :: Int -> [Player] -> Table -> Doc
 ppRound r ps table = vcat [ t "Round" <+> int r
-                          , nest o (ppPairs games)
+                          , nest o (ppGames games)
                           , nest o (ppByes byes)
                           , space
                           ]
-    where ppPairs = vcat . map ppGame
+    where ppGames = vcat . map ppGame
           ppGame (Game gid _ p1 p2 res) =
-              hsep [int gid <> colon, tt p1, dash, tt p2, parens . tt $ res]
+              hsep [int gid <> colon, pp p1, dash, pp p2, parens . pp $ res]
           ppByes [] = empty
-          ppByes bs = hsep . (t "bye:" :) . map tt $ bs
+          ppByes bs = hsep . (t "bye:" :) . map pp $ bs
           games = roundGames r table
           byes = roundByes r ps table
           o = 2 -- outline of games
@@ -56,3 +64,36 @@ ppTable :: [Player] -> Table -> Doc
 ppTable ps table =
     vcat . map (\r -> ppRound r ps table) $ [1 .. maxRound table]
 
+--
+-- Pretty-printing textual tables
+--
+-- TODO: document it properly!
+--
+pluses xs = plus <> xs <> plus
+pipes xs = pipe <+> xs <+> pipe
+
+widths :: [[String]] -> [Int]
+widths = map (+2) . foldl1 (zipWith max) . map (map length)
+
+s :: [[String]] -> Doc
+s = pluses . hcat . punctuate plus . map (t . flip replicate '-') . widths
+
+v :: [Int] -> [String] -> Doc
+v ws dt = pipes . hcat . punctuate (t " | ") $ zipWith fill ws dt
+
+fill :: Int -> String -> Doc
+fill n s
+    | length s < n = t s <> hcat (replicate (n - length s - 2) space)
+    | otherwise    = t (take n s)
+
+table dt = sepRow $$ (vcat . vpunctuate sepRow $ map (v ws) dt) $$ sepRow
+  where
+   sepRow = s dt
+   ws = widths dt
+
+-- test data
+headers = ["ID", "Name", "Price"]
+dt1 = ["1", "iPad", "12.00"]
+dt2 = ["2", "Cool laptop", "122.00"]
+dt3 = ["3", "Yet another cool laptop", "12004.44"]
+t1 = [headers, dt1, dt2, dt3]
