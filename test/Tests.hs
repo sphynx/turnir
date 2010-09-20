@@ -24,6 +24,7 @@ import qualified Data.Map as M
 
 import RoundRobin
 import Types
+import Pretty
 
 main = defaultMain tests
 

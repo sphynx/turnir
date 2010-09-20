@@ -15,6 +15,7 @@ module TurnirShell(
 
 import Types
 import Parser
+import Pretty
 import ShellUtils
 import qualified RoundRobin as RR
 
@@ -55,13 +56,13 @@ playersCmd = runSubshell playersSubshell
 showPairingsCmd :: Sh ShellState ()
 showPairingsCmd = do
   st <- getShellSt
-  mapM_ shellPutStrLn . ppTable (stPlayers st) . stTable $ st
+  shellPutStrLn . show $ ppTable (stPlayers st) (stTable st)
 
 roundRobinCmd :: Sh ShellState ()
 roundRobinCmd = do
     st <- getShellSt
     let pairings = RR.makePairingsForAllRounds . stPlayers $ st
-    mapM_ shellPutStrLn (ppTable (stPlayers st) pairings)
+    shellPutStrLn . show $ ppTable (stPlayers st) pairings
     modifyShellSt (\st -> st { stTable = pairings })
 
 setResultCmd :: Int -> String -> Sh ShellState ()
