@@ -12,7 +12,7 @@ flag test
 
 Executable turnir
   Main-Is: Main.hs
-  Build-Depends: base >= 4, Shellac, Shellac-haskeline, mtl, parsec
+  Build-Depends: base >= 4, Shellac, Shellac-haskeline, mtl, parsec, pretty
   Hs-Source-Dirs: src
 
 Executable tests
