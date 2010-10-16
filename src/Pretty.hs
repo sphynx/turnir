@@ -59,7 +59,7 @@ ppRound r ps table = vcat [ t "Round" <+> int r
           byes = roundByes r ps table
           o = 2 -- outline of games
 
--- | Pretty-prints tournament table, using players list
+-- | Pretty-prints all the rounds, using players list
 ppTable :: [Player] -> Table -> Doc
 ppTable ps table =
     vcat . map (\r -> ppRound r ps table) $ [1 .. maxRound table]
@@ -67,25 +67,33 @@ ppTable ps table =
 --
 -- Pretty-printing textual tables
 --
--- TODO: document it properly!
---
+
+-- | helper functions, ecloses list with pluses or pipes
 pluses xs = plus <> xs <> plus
 pipes xs = pipe <+> xs <+> pipe
 
+-- | return widths of columns, currently width is unbound
 widths :: [[String]] -> [Int]
 widths = map (+2) . foldl1 (zipWith max) . map (map length)
 
+-- | makes separator doc
 s :: [[String]] -> Doc
 s = pluses . hcat . punctuate plus . map (t . flip replicate '-') . widths
 
-v :: [Int] -> [String] -> Doc
+-- | makes values doc (row with values, separated by "|")
+v :: [Int]  -- ^ list which contains width of every column
+     -> [String]  -- ^ list with cells
+     -> Doc
 v ws dt = pipes . hcat . punctuate (t " | ") $ zipWith fill ws dt
 
+-- | `fills` string to make it of the given length (actually adds spaces)
+--   currently, it adds spaces to the right, eventually alignment will be used
 fill :: Int -> String -> Doc
 fill n s
     | length s < n = t s <> hcat (replicate (n - length s - 2) space)
     | otherwise    = t (take n s)
 
+-- | pretty prints table with data (first list is header row, next ones are rows with data)
 table dt = sepRow $$ (vcat . vpunctuate sepRow $ map (v ws) dt) $$ sepRow
   where
    sepRow = s dt
