@@ -20,6 +20,7 @@ import Test.QuickCheck
 import Test.HUnit
 
 import Data.List
+import Data.Maybe
 import qualified Data.Map as M
 
 import RoundRobin
@@ -76,8 +77,15 @@ propWhiteGames = forAll (choose (2, 16)) $ \x ->
                        else \y -> y /= x `div` 2 && y /= (x `div` 2) - 1
    in M.null $ M.filter pred $ whites x
 
-caseSetGameResult = (gameResult . gameById 1 . setGameResult 1 Win $ (games 4)) @?= Win
-caseSetGameResult2 = (gameResult . gameById 2 . setGameResult 2 Loss $ (games 4)) @?= Loss
+caseSetGameResult =
+  case gameById 1 . setGameResult 1 Win $ (games 4) of
+    Nothing -> assertFailure "No games got by ID = 1"
+    Just game -> gameResult game @?= Win
+
+caseSetGameResult2 =
+  case gameById 2 . setGameResult 2 Loss $ (games 4) of
+    Nothing -> assertFailure "No games got by ID = 2"
+    Just game -> gameResult game @?= Loss
 
 -- to test pretty-printing
 pp = ppTable (players 5) (games 5)

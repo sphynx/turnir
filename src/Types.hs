@@ -29,10 +29,11 @@ data ScoreType = ScoreType
 
 -- | All the data about player needed for engines to work properly, includes ID, names, rating and status
 data Player = Player
-              Int -- ^ Player ID to use for further reference
-              String -- ^ Player name
-              Int -- ^ Rating
-              Status -- ^ Status
+              { playerId :: Int -- ^ Player ID to use for further reference
+              , playerName :: String -- ^ Player name
+              , playerRating :: Int -- ^ Rating
+              , playerStatus :: Status -- ^ Status
+              }
 
 instance Show Player where
     show (Player _ name _ _) = name
@@ -87,8 +88,17 @@ playerScore p g
 playerTotal :: Player -> Table -> Float
 playerTotal p = sum . map (playerScore p) . playerGames p
 
-gameById :: GameID -> Table -> Game
-gameById gid = head . filter (\g -> gameId g == gid)
+gameById :: GameID -> Table -> Maybe Game
+gameById gid t = case filter (\g -> gameId g == gid) t of
+  []       -> Nothing
+  game : _ -> Just game
+
+gameByPlayers :: Player -> Player -> Table -> Maybe Game
+gameByPlayers p1 p2 t =
+  case filter (\g ->
+                (white g == p1 && black g == p2) || (white g == p2 && black g == p1)) t of
+    []       -> Nothing
+    game : _ -> Just game
 
 -- | Game along with its participants and result
 data Game = Game

@@ -11,7 +11,8 @@
 -- Uses wonderful HughesPJ pretty-printing combinator library.
 --
 module Pretty (
-  ppTable
+  ppTable,
+  ppRounds
 ) where
 
 import Text.PrettyPrint.HughesPJ
@@ -60,9 +61,21 @@ ppRound r ps table = vcat [ t "Round" <+> int r
           o = 2 -- outline of games
 
 -- | Pretty-prints all the rounds, using players list
-ppTable :: [Player] -> Table -> Doc
-ppTable ps table =
+ppRounds :: [Player] -> Table -> Doc
+ppRounds ps table =
     vcat . map (\r -> ppRound r ps table) $ [1 .. maxRound table]
+
+-- | Pretty-prints all the rounds, using players list
+ppTable :: [Player] -> Table -> Doc
+ppTable ps t =
+  table (header : cells)
+  where
+    header = "name" : map show [1 .. n]
+    cells = map (\i -> playerName (ps !! i) : map (\j -> result i j t) [0 .. n - 1]) [0 .. n - 1]
+    n = length ps
+    result i j t = pp $ gameByPlayers (ps !! i) (ps !! j) t
+    pp Nothing = " "
+    pp (Just x) = show . gameResult $ x
 
 --
 -- Pretty-printing textual tables

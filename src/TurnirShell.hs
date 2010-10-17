@@ -44,8 +44,10 @@ mkShellDescr = (mkShellDescription cmds react) {
 -- main shell commands
 cmds = [ exitCommand "quit"
        , helpCommand "help"
+       , helpCommand "?"
        , cmd "players" playersCmd "Launch players subshell"
-       , cmd "showpairings" showPairingsCmd "Shows calculated pairings"
+       , cmd "rounds" showRoundsCmd "Shows all rounds pairings"
+       , cmd "table" showTableCmd "Shows tournament scoretable"
        , cmd "rr" roundRobinCmd "Makes Round-Robin pairings"
        , cmd "result" setResultCmd "Set result of the game. Usage: set <gameId> <result> (0, 1/2, 1, etc.)"
        ]
@@ -53,8 +55,13 @@ cmds = [ exitCommand "quit"
 playersCmd :: Sh ShellState ()
 playersCmd = runSubshell playersSubshell
 
-showPairingsCmd :: Sh ShellState ()
-showPairingsCmd = do
+showRoundsCmd :: Sh ShellState ()
+showRoundsCmd = do
+  st <- getShellSt
+  shellPutStrLn . show $ ppRounds (stPlayers st) (stTable st)
+
+showTableCmd :: Sh ShellState ()
+showTableCmd = do
   st <- getShellSt
   shellPutStrLn . show $ ppTable (stPlayers st) (stTable st)
 
@@ -62,7 +69,7 @@ roundRobinCmd :: Sh ShellState ()
 roundRobinCmd = do
     st <- getShellSt
     let pairings = RR.makePairingsForAllRounds . stPlayers $ st
-    shellPutStrLn . show $ ppTable (stPlayers st) pairings
+    shellPutStrLn . show $ ppRounds (stPlayers st) pairings
     modifyShellSt (\st -> st { stTable = pairings })
 
 setResultCmd :: Int -> String -> Sh ShellState ()
@@ -88,11 +95,12 @@ mkPlayersDescr = (mkShellDescription playersCmds react) {
 playersCmds :: [ShellCommand PlayersShellState]
 playersCmds = [
       cmd "add" addPlayer "add player"
-    , cmd "print" printPlayers "print registered players"
-    , cmd "load " loadPlayers "load players from file"
+    , cmd "show" printPlayers "print registered players"
+    , cmd "load" loadPlayers "load players from file"
     , helpCommand "help"
     , helpCommand "?"
     , exitCommand "quit"
+    , exitCommand "up"
     ]
 
 addPlayer :: String -> Sh PlayersShellState ()
